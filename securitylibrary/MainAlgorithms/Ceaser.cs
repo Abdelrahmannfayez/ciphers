@@ -6,86 +6,39 @@ namespace SecurityLibrary
 {
     public class Ceaser : ICryptographicTechnique<string, int>
     {
-
+        private string alpha = "abcdefghijklmnopqrstuvwxyz";
         public string Encrypt(string plainText, int key)
         {
-            string cipher = "";
-            for (int i = 0; i < plainText.Length; i++)
+            string output = "";
+            foreach (char c in plainText)
             {
-                int ci = (plainText[i] + key);
-
-                if (plainText[i] >= 'a' && plainText[i] <= 'z')
-                {
-
-                    ci %= (26 + 'a');
-                    if (ci != plainText[i] + key)
-                        ci += 'a';
-                    char current_cipher = (char)ci;
-                    cipher += current_cipher;
-                }
-                else if (plainText[i] >= 'A' && plainText[i] <= 'Z')
-                {
-
-
-                    ci %= (26 + 'A');
-                    if (ci != plainText[i] + key)
-                        ci += 'A';
-                    char current_cipherr = (char)ci;
-                    cipher += current_cipherr;
-
-                }
+                int index = (alpha.IndexOf(c) + key) % 26;
+                output += alpha[index];
             }
-            return cipher;
+            return output.ToUpper();
         }
 
         public string Decrypt(string cipherText, int key)
         {
-            string plain = "";
-            for (int i = 0; i < cipherText.Length; i++)
+            string output = "";
+            string lowerCase = cipherText.ToLower();
+            foreach (char c in lowerCase)
             {
-                int ci = (cipherText[i] - key);
-
-                if (cipherText[i] >= 'a' && cipherText[i] <= 'z')
-                {
-                    if (!(ci >= 'a' && ci <= 'z'))
-                    {
-                        ci = 'z' - key + (cipherText[i] - 'a' + 1);
-                    }
-                    char current_cipher = (char)ci;
-
-                    plain += current_cipher;
-                }
-                else if (cipherText[i] >= 'A' && cipherText[i] <= 'Z')
-                {
-
-                    if (!(ci >= 'A' && ci <= 'Z'))
-                    {
-                        ci = 'Z' - key + (cipherText[i] - 'A' + 1);
-                    }
-                    char current_plain = (char)ci;
-
-                    plain += current_plain;
-                }
+                int index = (alpha.IndexOf(c) - key + 26) % 26;
+                output += alpha[index];
             }
-            return plain;
-
+            return output;
         }
 
         public int Analyse(string plainText, string cipherText)
         {
-            int key;
-            plainText=plainText.ToLower();
-            cipherText=cipherText.ToLower();
-            for ( key = 0; key < 26; key++)
+            int k = 0;
+            string lowerCase = cipherText.ToLower();
+            while ((alpha.IndexOf(plainText[0]) + k) % 26 != alpha.IndexOf(lowerCase[0]))
             {
-                if (Encrypt(plainText, key) == cipherText)
-
-                {
-                    return key; 
-                }
-
+                k++;
             }
-            return key;
+            return k;
         }
     }
 }

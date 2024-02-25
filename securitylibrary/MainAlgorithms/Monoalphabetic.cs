@@ -8,40 +8,62 @@ namespace SecurityLibrary
 {
     public class Monoalphabetic : ICryptographicTechnique<string, string>
     {
+        private string alpha = "abcdefghijklmnopqrstuvwxyz";
         public string Analyse(string plainText, string cipherText)
         {
-            throw new NotImplementedException();
-           
+            string output = "";
+            string lowerCase = cipherText.ToLower();
+            foreach (char c in alpha)
+            {
+                if (plainText.IndexOf(c) != -1)
+                {
+                    output += lowerCase[plainText.IndexOf(c)];
+                }
+                else
+                {
+                    output += '0';
+                }
+            }
+            if (output.IndexOf('0') != -1)
+            {
+                foreach (char c in alpha)
+                {
+                    if (output.IndexOf(c) == -1)
+                    {
+                        if (output.IndexOf('0') != -1)
+                        {
+                            int i = output.IndexOf('0');
+                            output = output.Substring(0, i) +
+                                                    c +
+                                                    output.Substring(i + 1);
+                        }
+                        else
+                            return output;
+                    }
+                }
+            }
+            return output;
         }
 
         public string Decrypt(string cipherText, string key)
         {
-            
-            string alpha = "abcdefghijklmnopqrstuvwxyz";
-            cipherText = cipherText.ToLower();
-            string plain = "";
-            for (int i = 0; i < cipherText.Length; i++)
+            string output = "";
+            string lowerCase = cipherText.ToLower();
+            foreach (char c in lowerCase)
             {
-                //get the letter index in key
-                int idx = key.IndexOf(cipherText[i]);
-                plain += alpha[idx];
-                
+                output += alpha[key.IndexOf(c)];
             }
-            return plain.ToLower();
+            return output;
         }
 
         public string Encrypt(string plainText, string key)
         {
-            string alpha = "abcdefghijklmnopqrstuvwxyz";
-            string cipher = "";
-            for (int i = 0; i < plainText.Length; i++)
+            string output = "";
+            foreach (char c in plainText)
             {
-                //get the letter index alpha
-                int idx = alpha.IndexOf(plainText[i]);
-                cipher += key[idx];
+                output += key[alpha.IndexOf(c)];
             }
-            return cipher;
-          
+            return output.ToUpper();
         }
 
 
