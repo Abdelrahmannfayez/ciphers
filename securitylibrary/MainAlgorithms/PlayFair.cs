@@ -53,7 +53,7 @@ namespace SecurityLibrary
 
             for (int i = 1; i < decryptedCharArray.Length - 1; i++)
             {
-                if (decryptedCharArray[i] == 'X' && decryptedCharArray[i - 1] == decryptedCharArray[i + 1])
+                if (decryptedCharArray[i] == 'X' && decryptedCharArray[i - 1] == decryptedCharArray[i + 1] && i % 2 == 1)
                 {
                     
                     decryptedCharArray[i] = '#';
