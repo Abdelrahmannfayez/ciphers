@@ -10,14 +10,80 @@ namespace SecurityLibrary
     {
         public string Decrypt(string cipherText, string key)
         {
-            throw new NotImplementedException();
+            char[,] matrix = constructMatrix(key);
+            List<string> stringDiagrams = constructDecryptionDiagram(cipherText);
+            string decryptedString = "";
+            foreach(string diagram in stringDiagrams) {
+                int firstCipherRow;
+                int firstCipherColumn;
+                int secondCipherRow;
+                int secondCipherColumn;
+                KeyValuePair<int, int> firstLetter = getCharacterPosition(diagram[0], matrix);
+                KeyValuePair<int, int> secondLetter = getCharacterPosition(diagram[1], matrix);
+
+                if (firstLetter.Key == secondLetter.Key) // in the same row
+                {
+                    firstCipherRow = firstLetter.Key;
+                    firstCipherColumn = (firstLetter.Value - 1 + 5) % 5;
+
+                    secondCipherRow = secondLetter.Key;
+                    secondCipherColumn = (secondLetter.Value - 1 + 5) % 5;
+                }
+                else if (firstLetter.Value == secondLetter.Value) // in the same column
+                {
+                    firstCipherRow = (firstLetter.Key - 1 + 5) % 5;
+                    firstCipherColumn = firstLetter.Value;
+
+                    secondCipherRow = (secondLetter.Key - 1 + 5) % 5;
+                    secondCipherColumn = secondLetter.Value;
+                }
+                else
+                {
+                    firstCipherRow = firstLetter.Key;
+                    firstCipherColumn = secondLetter.Value;
+
+                    secondCipherRow = secondLetter.Key;
+                    secondCipherColumn = firstLetter.Value;
+                }
+
+                decryptedString += matrix[firstCipherRow, firstCipherColumn].ToString() + matrix[secondCipherRow, secondCipherColumn].ToString();
+            }
+
+            char[] decryptedCharArray = decryptedString.ToCharArray();
+
+            for (int i = 1; i < decryptedCharArray.Length - 1; i++)
+            {
+                if (decryptedCharArray[i] == 'X' && decryptedCharArray[i - 1] == decryptedCharArray[i + 1])
+                {
+                    
+                    decryptedCharArray[i] = '#';
+                }
+            }
+
+            int lastIndex = decryptedCharArray.Length - 1;
+            if (decryptedCharArray[lastIndex] == 'X') decryptedCharArray[lastIndex] = '#';
+
+            string modifiedDecryptedString = new string(decryptedCharArray);
+            return modifiedDecryptedString.Replace("#", "");
+            
         }
+
+        private List<string> constructDecryptionDiagram(string cipherText) {
+            List<string> stringList = new List<string>();
+
+            for (int i =0; i<cipherText.Length; i += 2)
+            {
+                stringList.Add((cipherText[i].ToString() + cipherText[i + 1].ToString()));
+            }
+            return stringList;
+        }
+
 
         public string Encrypt(string plainText, string key)
         {
 
             char[,] matrix = constructMatrix(key);
-            List<string> stringDiagrams = constructDiagrams(plainText);
+            List<string> stringDiagrams = constructEncryptionDiagrams(plainText);
             string encryptedString = "";
 
             foreach (string diagram in stringDiagrams)
@@ -112,7 +178,7 @@ namespace SecurityLibrary
             return matrix;
         }
 
-        private List<string> constructDiagrams(string plainText)
+        private List<string> constructEncryptionDiagrams(string plainText)
         {
 
             List<string> stringList = new List<string>();
