@@ -107,43 +107,28 @@ namespace SecurityLibrary
 
         public string AnalyseUsingCharFrequency(string cipher)
         {
-            Dictionary<char, double> map = new Dictionary<char, double>();
+            Dictionary<char, int> map = new Dictionary<char, int>();
             foreach (char c in cipher)
             {
                 if (!map.ContainsKey(c))
                 {
-                    map.Add(c, 1);
+                    map.Add(c, 0);
                 }
-                else
-                {
-                    map[c]++;
-                }
-            }
-            double totalCharacters = cipher.Length;
-            foreach (var key in map.Keys.ToList())
-            {
-                map[key] /= totalCharacters;
+                map[c]++;
             }
             var sortedDict = from entry in map orderby entry.Value descending select entry;
-            string output = "";
             Dictionary<char, char> decryptionMap = new Dictionary<char, char>();
-            string expectedFrequencyCharacters = "ETAOINSRHLDCUMFPGWYBVKXJQZ";
+            string frequencyCharacters = "ETAOINSRHLDCUMFPGWYBVKXJQZ";
             int i = 0;
             foreach (var e in sortedDict)
             {
-                decryptionMap[e.Key] = expectedFrequencyCharacters[i];
+                decryptionMap[e.Key] = frequencyCharacters[i];
                 ++i;
             }
+            string output = "";
             foreach (char c in cipher)
             {
-                if (decryptionMap.ContainsKey(c))
-                {
-                    output += decryptionMap[c];
-                }
-                else
-                {
-                    output += c;
-                }
+                output += decryptionMap[c];
             }
             return output.ToLower();
         }
