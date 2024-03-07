@@ -37,9 +37,17 @@ namespace SecurityLibrary
                 }
                 row++;
             }
+            int cofactor;
+
+            if (matrix.GetLength(0) == 2)
+            {
+                cofactor = result[0, 0];
+                if ((i + j) % 2 == 1) cofactor *= -1;
+                return cofactor;
+            }
 
 
-            int cofactor = (result[1, 1] * result[0, 0]) - (result[0, 1] * result[1, 0]);
+            cofactor = (result[1, 1] * result[0, 0]) - (result[0, 1] * result[1, 0]);
 
             if ((i + j) % 2 == 1) cofactor *= -1;
 
@@ -53,8 +61,8 @@ namespace SecurityLibrary
             if (matrix.GetLength(0) == 3)
             {
                 determinant = matrix[0, 0] * (matrix[1, 1] * matrix[2, 2] - matrix[1, 2] * matrix[2, 1])
-                                - matrix[0, 1] * (matrix[1, 0] * matrix[2, 2] - matrix[1, 2] * matrix[2, 0])
-                                + matrix[0, 2] * (matrix[1, 0] * matrix[2, 1] - matrix[1, 1] * matrix[2, 0]);
+                                    - matrix[0, 1] * (matrix[1, 0] * matrix[2, 2] - matrix[1, 2] * matrix[2, 0])
+                                    + matrix[0, 2] * (matrix[1, 0] * matrix[2, 1] - matrix[1, 1] * matrix[2, 0]);
             }
             else
             {
@@ -99,11 +107,12 @@ namespace SecurityLibrary
 
         private int[,] calculateMatrixInverse(int[,] keyMatrix)
         {
-            int[,] matrixInverse = new int[3, 3];
+            int length = keyMatrix.GetLength(0);
+            int[,] matrixInverse = new int[length, length];
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < length; i++)
             {
-                for (int j = 0; j < 3; j++)
+                for (int j = 0; j < length; j++)
                 {
                     matrixInverse[i, j] = getCofactor(keyMatrix, i, j);
                     matrixInverse[i, j] = matrixInverse[i, j] % 26;
@@ -115,9 +124,9 @@ namespace SecurityLibrary
 
             int modInverse = modularInverse(determinanate, 26);
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < length; i++)
             {
-                for (int j = 0; j < 3; j++)
+                for (int j = 0; j < length; j++)
                 {
                     matrixInverse[i, j] = (matrixInverse[i, j] * modInverse) % 26;
                 }
