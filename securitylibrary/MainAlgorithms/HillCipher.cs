@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -9,16 +10,52 @@ namespace SecurityLibrary
 
     public class HillCipher : ICryptographicTechnique<string, string>, ICryptographicTechnique<List<int>, List<int>>
     {
-
+        // to implement
         public List<int> Analyse(List<int> plainText, List<int> cipherText)
         {
+            List<int> key = new List<int>();
+            for(int i = 0; i < 26; i++)
+            {
+                for(int j = 0; j < 26; j++)
+                {
+                    for (int k = 0; k < 26; k++)
+                    {
+                        for (int l = 0; l < 26; l++)
+                        {
+                            key.Add(i);
+                            key.Add(j);
+                            key.Add(k);
+                            key.Add(l);
+                            List<int> cipher2 = Encrypt(plainText, key);
+                            int cnt = 0;
+                            for (int m = 0; m < cipherText.Count; m++)
+                            {
+                                if (cipherText[m]== cipher2[m])
+                                    cnt++;
+                            }
+                            if (cipherText.Count == cnt)
+                                return key;
+                            else
+                            {
+                                key.Clear();
+                            }
 
-            throw new NotImplementedException();
+
+                        }
+                    }
+                }
+            }
+
+            throw new InvalidAnlysisException();
         }
+        
+        
         public string Analyse(string plainText, string cipherText)
         {
             throw new NotImplementedException();
         }
+        
+        
         private int getCofactor(int[,] matrix, int i, int j)
         {
             int[,] result = new int[2, 2];
@@ -194,11 +231,52 @@ namespace SecurityLibrary
             throw new NotImplementedException();
         }
 
-
+        // to implement
         public List<int> Analyse3By3Key(List<int> plain3, List<int> cipher3)
         {
+            int[,] PlainMatrix = getKeyMatrix(plain3);
+            int[,] CorrectCipherMatrix = new int[3, 3];
+            int[,] CorrectplainMatrix = new int[3, 3];
+            int[,] cipherMatrix = getKeyMatrix(cipher3);
+            int[,] PlainInverse = calculateMatrixInverse(PlainMatrix);
 
-            throw new NotImplementedException();
+            //Correct Cipher and plain Matrix
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    CorrectCipherMatrix[j, i] = cipherMatrix[i, j];
+                    CorrectplainMatrix[j, i] = PlainInverse[i, j];
+
+                }
+            }
+
+            List<List<int>> MatrixList = ConvertMatrixToListOfLists(CorrectplainMatrix);
+            
+            //get the key matrix
+            List<List<int>> KEY = new List<List<int>>();
+            foreach (List<int> sublist in MatrixList)
+            {
+                List<int> resultedPlain = multiplySubListByKeyMatrix(sublist, CorrectCipherMatrix);
+                for (int i = 0; i < resultedPlain.Count; i++)
+                    Console.Write(resultedPlain[i] + " ");
+                Console.WriteLine();
+
+                KEY.Add(resultedPlain);
+            }
+            List<int> FlattenedKey = new List<int>();
+            // transpose then flatten the matrix
+            for (int i = 0; i < 3; i++)
+            {
+                foreach (List<int> sublist in KEY)
+                {
+                    FlattenedKey.Add(sublist[i]);
+                }
+            }
+        
+
+            return FlattenedKey;
+            // throw new NotImplementedException();
         }
 
         public string Analyse3By3Key(string plain3, string cipher3)
@@ -225,6 +303,7 @@ namespace SecurityLibrary
             return result;
         }
 
+        // 
 
         private List<List<int>> getPlainText(List<int> plainText, int size)
         {
@@ -250,6 +329,7 @@ namespace SecurityLibrary
             return result;
         }
 
+        //
         private int[,] getKeyMatrix(List<int> key)
         {
             int matrixDimensions = (int)Math.Sqrt(key.Count);
@@ -266,6 +346,26 @@ namespace SecurityLibrary
             }
 
             return keyMatrix;
+        }
+
+
+        private List<List<int>> ConvertMatrixToListOfLists(int[,] matrix)
+        {
+            List<List<int>> listOfLists = new List<List<int>>();
+
+            for (int i = 0; i < matrix.GetLength(0); i++)
+            {
+                List<int> rowList = new List<int>();
+
+                for (int j = 0; j < matrix.GetLength(1); j++)
+                {
+                    rowList.Add(matrix[j, i]);
+                }
+
+                listOfLists.Add(rowList);
+            }
+
+            return listOfLists;
         }
 
 
