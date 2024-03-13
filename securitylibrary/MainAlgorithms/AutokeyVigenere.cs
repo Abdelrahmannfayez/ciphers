@@ -27,8 +27,6 @@ namespace SecurityLibrary
             for (int i = 0; i < NKey.Length; i++)
             {
                 temp += NKey[i];
-                //Console.WriteLine(temp);
-
                 if (plainText.Equals(Decrypt(cipherText, temp).ToLower()))
                 {
 
@@ -43,8 +41,6 @@ namespace SecurityLibrary
             cipherText = cipherText.ToLower();
             string alpha = "abcdefghijklmnopqrstuvwxyz";
             string Nkey = key;
-            int add = 0;
-           
             string plain = "";
             for (int i = 0; i < cipherText.Length; i++)
             {
