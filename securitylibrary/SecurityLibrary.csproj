@@ -41,7 +41,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MainAlgorithms\AES.cs" />
     <Compile Include="ElGamal\ELGAMAL.cs" />
+    <Compile Include="MainAlgorithms\ExtendedEuclid.cs" />
     <Compile Include="ICryptographic_Technique.cs" />
     <Compile Include="MainAlgorithms\Columnar.cs" />
     <Compile Include="DiffieHellman\DiffieHellman.cs" />
