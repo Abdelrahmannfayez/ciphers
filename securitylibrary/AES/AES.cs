@@ -21,7 +21,9 @@ namespace SecurityLibrary.AES
             throw new NotImplementedException();
         }
 
-        //Shift Rows & inverse Shift rows
+        /// <summary>
+        /// Title: Shift rows and inverse shift rows 
+        /// </summary>
         private string shiftRows(string plainText)
         {
             return shift(plainText, false, 2);
@@ -52,9 +54,11 @@ namespace SecurityLibrary.AES
             }
             return output;
         }
-<<<<<<< HEAD
-        //Sub bytes & inverse Sub bytes
-      
+
+        /// <summary>
+        /// Title: sub bytes and inverse sub bytes 
+        /// </summary>
+
         static string[,] S_Box = new string[16, 16] {
                 { "63", "7C", "77", "7B", "F2", "6B", "6F", "C5", "30", "01", "67", "2B", "FE", "D7", "AB", "76" },
                 { "CA", "82", "C9", "7D", "FA", "59", "47", "F0", "AD", "D4", "A2", "AF", "9C", "A4", "72", "C0" },
@@ -93,16 +97,16 @@ namespace SecurityLibrary.AES
         };
 
 
-        private string sub_bytes(string plaintext )
+        private string sub_bytes(string plaintext)
         {
             // map: Hex -> index in sbox.
             Dictionary<char, int> map = new Dictionary<char, int>();
             map['0'] = 0; map['1'] = 1; map['2'] = 2; map['3'] = 3; map['4'] = 4; map['5'] = 5; map['6'] = 6; map['7'] = 7;
-            map['8'] = 8; map['9'] = 9; map['a'] = 10; map['b'] = 11; map['c'] = 12; map['d'] = 13; map['e'] = 14; 
+            map['8'] = 8; map['9'] = 9; map['a'] = 10; map['b'] = 11; map['c'] = 12; map['d'] = 13; map['e'] = 14;
             map['f'] = 15; map['A'] = 10; map['B'] = 11; map['C'] = 12; map['D'] = 13; map['E'] = 14; map['F'] = 15;
             string output = "0x";
-            for (int i = 2; i < plaintext.Length; i+=2)
-            { 
+            for (int i = 2; i < plaintext.Length; i += 2)
+            {
                 char row = plaintext[i];
                 char col = plaintext[i + 1];
                 int row_idx = map[row];
@@ -130,8 +134,14 @@ namespace SecurityLibrary.AES
 
             }
             return output;
-=======
-                static string Addroundkey(string plainText, string k)
+
+        }
+        /// <summary>
+        /// Title:Add round key 
+        /// </summary>
+        ///    
+        ///        
+        static string Addroundkey(string plainText, string k)
         {
             string xor_res = "0x";
             string[,] state = new string[4, 4];
@@ -185,6 +195,7 @@ namespace SecurityLibrary.AES
             }
             return arr;
         }
+
         static string convArr_String(string[,] x)
         {
             string str = "0x";
@@ -198,7 +209,8 @@ namespace SecurityLibrary.AES
                 }
             }
             return str;
->>>>>>> 4e8a2fa7f112a616ba74dddaeae4fc2b2cf9cc18
+
         }
+
     }
 }
