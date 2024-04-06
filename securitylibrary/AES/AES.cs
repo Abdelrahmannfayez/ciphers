@@ -47,8 +47,9 @@ namespace SecurityLibrary.AES
         public override string Encrypt(string plainText, string key)
         {
             string[,] plain = ConvertStringTo2DArray(plainText);
-            string[,] keyy = ConvertStringTo2DArray(key);
-            string[,] result = AddRoundKeys(plain, keyy);
+            string[,] keyMatrix = ConvertStringTo2DArray(key);
+            string[,] result = AddRoundKeys(plain, keyMatrix);
+            List<string[,]> roundKeys = GenerateRoundKeys(keyMatrix);
 
             for (int i = 0; i < 10; i++)
             {
@@ -60,8 +61,7 @@ namespace SecurityLibrary.AES
                     result = MixColumns(result);
                 }
 
-                keyy = UpdateKey(keyy, i);
-                result = AddRoundKeys(result, keyy);
+                result = AddRoundKeys(result, roundKeys[i]);
             }
 
             string cipherText = "0x";
