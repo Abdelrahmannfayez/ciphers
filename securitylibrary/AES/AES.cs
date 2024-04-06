@@ -13,204 +13,376 @@ namespace SecurityLibrary.AES
     {
         public override string Decrypt(string cipherText, string key)
         {
-            throw new NotImplementedException();
+            string[,] cipher = ConvertStringTo2DArray(cipherText);
+            string[,] keyMatrix = ConvertStringTo2DArray(key);
+            List<string[,]> roundKeys = GenerateRoundKeys(keyMatrix);
+
+            string[,] result = AddRoundKeys(cipher, roundKeys[9]);
+            result = InvShiftRows(result);
+            result = InvSubBytes(result);
+
+            for (int i = 8; i >= 0; i--)
+            {
+                result = AddRoundKeys(result, roundKeys[i]);
+                result = InvMixColumns(result);
+                result = InvShiftRows(result);
+                result = InvSubBytes(result);
+
+            }
+
+            result = AddRoundKeys(result, keyMatrix);
+            string plainText = "0x";
+
+            for (int i = 0; i < result.GetLength(0); i++)
+            {
+                for (int j = 0; j < result.GetLength(1); j++)
+                {
+                    plainText += result[j, i].Replace("0x", "");
+                }
+            }
+
+            return plainText;
         }
 
         public override string Encrypt(string plainText, string key)
         {
-            throw new NotImplementedException();
-        }
+            string[,] plain = ConvertStringTo2DArray(plainText);
+            string[,] keyy = ConvertStringTo2DArray(key);
+            string[,] result = AddRoundKeys(plain, keyy);
 
-        /// <summary>
-        /// Title: Shift rows and inverse shift rows 
-        /// </summary>
-        private string shiftRows(string plainText)
-        {
-            return shift(plainText, false, 2);
-        }
-
-        private string InvShiftRows(string shiftedText)
-        {
-            return shift(shiftedText, true, 6);
-        }
-
-        private string shift(string text, bool invert, int index)
-        {
-            string output = text.Substring(0, 10);
-            int startIndex = 10;
-            int endIndex = 18;
-            while (endIndex <= text.Length + 1)
+            for (int i = 0; i < 10; i++)
             {
-                int countEnd = endIndex - (startIndex + index);
-                output += text.Substring(startIndex + index, countEnd);
-                int countShiftedChars = (startIndex + index) - startIndex;
-                output += text.Substring(startIndex, countShiftedChars);
-                startIndex = endIndex;
-                endIndex += 8;
-                if (invert)
-                    index -= 2;
-                else
-                    index += 2;
+                result = SubBytes(result);
+                result = ShiftRows(result);
+
+                if (i != 9)
+                {
+                    result = MixColumns(result);
+                }
+
+                keyy = UpdateKey(keyy, i);
+                result = AddRoundKeys(result, keyy);
             }
-            return output;
-        }
 
-        /// <summary>
-        /// Title: sub bytes and inverse sub bytes 
-        /// </summary>
+            string cipherText = "0x";
 
-        static string[,] S_Box = new string[16, 16] {
-                { "63", "7C", "77", "7B", "F2", "6B", "6F", "C5", "30", "01", "67", "2B", "FE", "D7", "AB", "76" },
-                { "CA", "82", "C9", "7D", "FA", "59", "47", "F0", "AD", "D4", "A2", "AF", "9C", "A4", "72", "C0" },
-                { "B7", "FD", "93", "26", "36", "3F", "F7", "CC", "34", "A5", "E5", "F1", "71", "D8", "31", "15" },
-                { "04", "C7", "23", "C3", "18", "96", "05", "9A", "07", "12", "80", "E2", "EB", "27", "B2", "75" },
-                { "09", "83", "2C", "1A", "1B", "6E", "5A", "A0", "52", "3B", "D6", "B3", "29", "E3", "2F", "84" },
-                { "53", "D1", "00", "ED", "20", "FC", "B1", "5B", "6A", "CB", "BE", "39", "4A", "4C", "58", "CF" },
-                { "D0", "EF", "AA", "FB", "43", "4D", "33", "85", "45", "F9", "02", "7F", "50", "3C", "9F", "A8" },
-                { "51", "A3", "40", "8F", "92", "9D", "38", "F5", "BC", "B6", "DA", "21", "10", "FF", "F3", "D2" },
-                { "CD", "0C", "13", "EC", "5F", "97", "44", "17", "C4", "A7", "7E", "3D", "64", "5D", "19", "73" },
-                { "60", "81", "4F", "DC", "22", "2A", "90", "88", "46", "EE", "B8", "14", "DE", "5E", "0B", "DB" },
-                { "E0", "32", "3A", "0A", "49", "06", "24", "5C", "C2", "D3", "AC", "62", "91", "95", "E4", "79" },
-                { "E7", "C8", "37", "6D", "8D", "D5", "4E", "A9", "6C", "56", "F4", "EA", "65", "7A", "AE", "08" },
-                { "BA", "78", "25", "2E", "1C", "A6", "B4", "C6", "E8", "DD", "74", "1F", "4B", "BD", "8B", "8A" },
-                { "70", "3E", "B5", "66", "48", "03", "F6", "0E", "61", "35", "57", "B9", "86", "C1", "1D", "9E" },
-                { "E1", "F8", "98", "11", "69", "D9", "8E", "94", "9B", "1E", "87", "E9", "CE", "55", "28", "DF" },
-                { "8C", "A1", "89", "0D", "BF", "E6", "42", "68", "41", "99", "2D", "0F", "B0", "54", "BB", "16" }
-            };
-        static string[,] Inv_S_Box = new string[16, 16] {
-                { "52", "09", "6A", "D5", "30", "36", "A5", "38", "BF", "40", "A3", "9E", "81", "F3", "D7", "FB" },
-                { "7C", "E3", "39", "82", "9B", "2F", "FF", "87", "34", "8E", "43", "44", "C4", "DE", "E9", "CB" },
-                { "54", "7B", "94", "32", "A6", "C2", "23", "3D", "EE", "4C", "95", "0B", "42", "FA", "C3", "4E" },
-                { "08", "2E", "A1", "66", "28", "D9", "24", "B2", "76", "5B", "A2", "49", "6D", "8B", "D1", "25" },
-                { "72", "F8", "F6", "64", "86", "68", "98", "16", "D4", "A4", "5C", "CC", "5D", "65", "B6", "92" },
-                { "6C", "70", "48", "50", "FD", "ED", "B9", "DA", "5E", "15", "46", "57", "A7", "8D", "9D", "84" },
-                { "90", "D8", "AB", "00", "8C", "BC", "D3", "0A", "F7", "E4", "58", "05", "B8", "B3", "45", "06" },
-                { "D0", "2C", "1E", "8F", "CA", "3F", "0F", "02", "C1", "AF", "BD", "03", "01", "13", "8A", "6B" },
-                { "3A", "91", "11", "41", "4F", "67", "DC", "EA", "97", "F2", "CF", "CE", "F0", "B4", "E6", "73" },
-                { "96", "AC", "74", "22", "E7", "AD", "35", "85", "E2", "F9", "37", "E8", "1C", "75", "DF", "6E" },
-                { "47", "F1", "1A", "71", "1D", "29", "C5", "89", "6F", "B7", "62", "0E", "AA", "18", "BE", "1B" },
-                { "FC", "56", "3E", "4B", "C6", "D2", "79", "20", "9A", "DB", "C0", "FE", "78", "CD", "5A", "F4" },
-                { "1F", "DD", "A8", "33", "88", "07", "C7", "31", "B1", "12", "10", "59", "27", "80", "EC", "5F" },
-                { "60", "51", "7F", "A9", "19", "B5", "4A", "0D", "2D", "E5", "7A", "9F", "93", "C9", "9C", "EF" },
-                { "A0", "E0", "3B", "4D", "AE", "2A", "F5", "B0", "C8", "EB", "BB", "3C", "83", "53", "99", "61" },
-                { "17", "2B", "04", "7E", "BA", "77", "D6", "26", "E1", "69", "14", "63", "55", "21", "0C", "7D" }
-        };
-
-
-        private string sub_bytes(string plaintext)
-        {
-            // map: Hex -> index in sbox.
-            Dictionary<char, int> map = new Dictionary<char, int>();
-            map['0'] = 0; map['1'] = 1; map['2'] = 2; map['3'] = 3; map['4'] = 4; map['5'] = 5; map['6'] = 6; map['7'] = 7;
-            map['8'] = 8; map['9'] = 9; map['a'] = 10; map['b'] = 11; map['c'] = 12; map['d'] = 13; map['e'] = 14;
-            map['f'] = 15; map['A'] = 10; map['B'] = 11; map['C'] = 12; map['D'] = 13; map['E'] = 14; map['F'] = 15;
-            string output = "0x";
-            for (int i = 2; i < plaintext.Length; i += 2)
+            for (int i = 0; i < result.GetLength(0); i++)
             {
-                char row = plaintext[i];
-                char col = plaintext[i + 1];
-                int row_idx = map[row];
-                int col_idx = map[col];
-                output += S_Box[row_idx, col_idx];
-
+                for (int j = 0; j < result.GetLength(1); j++)
+                {
+                    cipherText += result[j, i].Replace("0x", "");
+                }
             }
-            return output;
-        }
-        private string Invsub_bytes(string plaintext)
-        {
-            // map: Hex -> index in sbox.
-            Dictionary<char, int> map = new Dictionary<char, int>();
-            map['0'] = 0; map['1'] = 1; map['2'] = 2; map['3'] = 3; map['4'] = 4; map['5'] = 5; map['6'] = 6; map['7'] = 7;
-            map['8'] = 8; map['9'] = 9; map['a'] = 10; map['b'] = 11; map['c'] = 12; map['d'] = 13; map['e'] = 14;
-            map['f'] = 15; map['A'] = 10; map['B'] = 11; map['C'] = 12; map['D'] = 13; map['E'] = 14; map['F'] = 15;
-            string output = "0x";
-            for (int i = 2; i < plaintext.Length; i += 2)
-            {
-                char row = plaintext[i];
-                char col = plaintext[i + 1];
-                int row_idx = map[row];
-                int col_idx = map[col];
-                output += Inv_S_Box[row_idx, col_idx];
 
-            }
-            return output;
-
+            return cipherText;
         }
-        /// <summary>
-        /// Title:Add round key 
-        /// </summary>
-        ///    
-        ///        
-        static string Addroundkey(string plainText, string k)
+
+
+        private string[,] InvSubBytes(string[,] state)
         {
-            string xor_res = "0x";
-            string[,] state = new string[4, 4];
-            string[,] cipherkey = new string[4, 4];
+
             string[,] output = new string[4, 4];
-            if (plainText[0] == '0' && plainText[1] == 'x')
+            Dictionary<char, int> map = new Dictionary<char, int>();
+            map['0'] = 0; map['1'] = 1; map['2'] = 2; map['3'] = 3; map['4'] = 4; map['5'] = 5; map['6'] = 6; map['7'] = 7;
+            map['8'] = 8; map['9'] = 9; map['a'] = 10; map['b'] = 11; map['c'] = 12; map['d'] = 13; map['e'] = 14;
+            map['f'] = 15; map['A'] = 10; map['B'] = 11; map['C'] = 12; map['D'] = 13; map['E'] = 14; map['F'] = 15;
+
+            for (int i = 0; i < state.GetLength(0); i++)
             {
-                int idx = 2;
-                for (int c = 0; c < 4; c++)
+                for (int j = 0; j < state.GetLength(1); j++)
                 {
-                    for (int r = 0; r < 4; r++)
+                    string temp = state[i, j].Replace("0x", "");
+                    int rowIndex = map[temp[0]];
+                    int colIndex = map[temp[1]];
+                    output[i, j] = "0x" + Constants.InvSbox[rowIndex, colIndex];
+                }
+            }
+
+            return output;
+        }
+
+
+        private string[,] InvShiftRows(string[,] state)
+        {
+            for (int i = 1; i < 4; i++)
+            {
+                LinkedList<string> rowList = new LinkedList<string>();
+
+
+                for (int j = 0; j < 4; j++)
+                {
+                    rowList.AddLast(state[i, j]);
+                }
+
+
+                for (int k = 0; k < i; k++)
+                {
+                    string lastElement = rowList.Last.Value;
+                    rowList.RemoveLast();
+                    rowList.AddFirst(lastElement);
+                }
+
+
+                int index = 0;
+                foreach (string element in rowList)
+                {
+                    state[i, index++] = element;
+                }
+            }
+
+
+
+            return state;
+        }
+
+
+
+        private string[,] InvMixColumns(string[,] state)
+        {
+            string[,] output = new string[4, 4];
+
+
+            for (int c = 0; c < 4; c++)
+            {
+                for (int r = 0; r < 4; r++)
+                {
+                    output[r, c] = "0x00";
+
+                    for (int i = 0; i < 4; i++)
                     {
-                        int b1 = Convert.ToInt32(plainText.Substring(idx, 2), 16);
-                        int b2 = Convert.ToInt32(k.Substring(idx, 2), 16);
-                        int xorResult = b1 ^ b2;
-                        xor_res += xorResult.ToString("X2").ToLower();
-                        idx = idx + 2;
+                        output[r, c] = XOR(output[r, c], MultiplyHexNumbers(Constants.InvMixColumnsMatrix[r, i], state[i, c]));
                     }
                 }
             }
-            return xor_res;
+
+            return output;
         }
-        static string[,] xorfunction(string[,] x, string[,] y)
+
+
+        private List<string[,]> GenerateRoundKeys(string[,] key)
         {
-            string[,] xor_res = new string[4, 1];
-            for (int r = 0; r < 4; r++)
+
+            List<string[,]> roundKeys = new List<string[,]>();
+
+            string[,] resultKey = UpdateKey(key, 0);
+            roundKeys.Add(resultKey);
+            for (int i = 1; i < 10; i++)
             {
-                int b1 = Convert.ToInt32(x[r, 0], 16);
-                int b2 = Convert.ToInt32(y[r, 0], 16);
-                int xorResult = b1 ^ b2;
-                xor_res[r, 0] = xorResult.ToString("X2").ToLower();
+                resultKey = UpdateKey(resultKey, i);
+                roundKeys.Add(resultKey);
+
             }
-            return xor_res;
+
+            return roundKeys;
         }
-        static string[,] convString_Arr(string x)
-        {
-            int len = (x.Length) - 2;
-            int col = len / (2 * 4);
-            string[,] arr = new string[4, col];
-            if (x[0] == '0' && x[1] == 'x')
+
+        private string[,] ConvertStringTo2DArray(string hexText) {
+
+            string[,] array2D = new string[4, 4];
+            hexText = hexText.Replace("0x", "");
+            for (int i = 0; i < hexText.Length; i += 2)
             {
-                int idx = 2;
-                for (int c = 0; c < col; c++)
+                int row = i / 8; 
+                int column = (i % 8) / 2; 
+                array2D[column, row] = "0x" + hexText.Substring(i, 2);
+            }
+
+            return array2D;
+        }
+        private string[,] SubBytes(string[,] state)
+        {
+
+            string[,] output = new string[4, 4];
+            Dictionary<char, int> map = new Dictionary<char, int>();
+            map['0'] = 0; map['1'] = 1; map['2'] = 2; map['3'] = 3; map['4'] = 4; map['5'] = 5; map['6'] = 6; map['7'] = 7;
+            map['8'] = 8; map['9'] = 9; map['a'] = 10; map['b'] = 11; map['c'] = 12; map['d'] = 13; map['e'] = 14;
+            map['f'] = 15; map['A'] = 10; map['B'] = 11; map['C'] = 12; map['D'] = 13; map['E'] = 14; map['F'] = 15;
+
+            for (int i = 0; i < state.GetLength(0); i++)
+            {
+                for (int j = 0; j < state.GetLength(1); j++)
                 {
-                    for (int r = 0; r < 4; r++)
+                    string temp = state[i, j].Replace("0x", "");
+                    int rowIndex = map[temp[0]];
+                    int colIndex = map[temp[1]];
+                    output[i, j] = "0x" + Constants.S_Box[rowIndex, colIndex];
+                }
+            }
+
+            return output;
+        }
+
+        private string[] keySubBytes(LinkedList<string> key)
+        {
+
+            string[] output = new string[4];
+            Dictionary<char, int> map = new Dictionary<char, int>();
+            map['0'] = 0; map['1'] = 1; map['2'] = 2; map['3'] = 3; map['4'] = 4; map['5'] = 5; map['6'] = 6; map['7'] = 7;
+            map['8'] = 8; map['9'] = 9; map['a'] = 10; map['b'] = 11; map['c'] = 12; map['d'] = 13; map['e'] = 14;
+            map['f'] = 15; map['A'] = 10; map['B'] = 11; map['C'] = 12; map['D'] = 13; map['E'] = 14; map['F'] = 15;
+
+
+
+            LinkedListNode<string> currentNode = key.First;
+            int j = 0;
+
+            while (currentNode != null)
+            {
+                string temp = currentNode.Value.Replace("0x", "");
+                int rowIndex = map[temp[0]];
+                int colIndex = map[temp[1]];
+                output[j] = "0x" + Constants.S_Box[rowIndex, colIndex];
+                j++;
+                currentNode = currentNode.Next;
+            }
+
+
+            return output;
+        }
+
+        private string[,] ShiftRows(string[,] state)
+        {
+            for (int i = 1; i < 4; i++)
+            {
+                LinkedList<string> rowList = new LinkedList<string>();
+
+                
+                for (int j = 0; j < 4; j++)
+                {
+                    rowList.AddLast(state[i, j]);
+                }
+
+                
+                for (int k = 0; k < i; k++)
+                {
+                    string firstElement = rowList.First.Value;
+                    rowList.RemoveFirst();
+                    rowList.AddLast(firstElement);
+                }
+
+                
+                int index = 0;
+                foreach (string element in rowList)
+                {
+                    state[i, index++] = element;
+                }
+            }
+
+            return state;
+        }
+
+        private string XOR(string state, string key) {           
+            int num1 = Convert.ToInt32(state, 16);
+            int num2 = Convert.ToInt32(key, 16);
+            
+            int result = num1 ^ num2;
+            
+            string resultHex = "0x" + result.ToString("X2");
+
+            return resultHex;
+        }
+
+        private string[,] AddRoundKeys(string[,] state, string[,] key) {
+
+            string[,] result = new string[4, 4];
+
+            for (int i = 0; i < 4; i++) 
+            {
+                for (int j = 0; j < 4; j++) 
+                {
+                    result[i, j] = XOR(state[i, j], key[i, j]);
+                }
+            }
+
+            return result;
+        }
+        
+
+       private string[,] MixColumns(string[,] state)
+        {
+            string[,] output = new string[4, 4];
+           
+
+            for (int c = 0; c < 4; c++)
+            {
+                for (int r = 0; r < 4; r++)
+                {
+                    output[r, c] = "0x00"; 
+
+                    for (int i = 0; i < 4; i++)
                     {
-                        arr[r, c] = x.Substring(idx, 2);
-                        idx = idx + 2;
+                        output[r, c] = XOR(output[r, c], MultiplyHexNumbers(Constants.mixColumnsMatrix[r, i], state[i, c]));
                     }
                 }
             }
-            return arr;
+
+            return output;
         }
 
-        static string convArr_String(string[,] x)
+
+        private string MultiplyHexNumbers(string num1, string num2)
         {
-            string str = "0x";
-            int row = x.GetLength(0);
-            int col = x.GetLength(1);
-            for (int c = 0; c < col; c++)
+            int a = Convert.ToInt32(num1.Substring(2), 16);
+            int b = Convert.ToInt32(num2.Substring(2), 16);
+
+            int result = 0;
+            while (b != 0) 
             {
-                for (int r = 0; r < row; r++)
+                if ((b & 0x01) != 0)
                 {
-                    str += x[r, c];
+                    result ^= a;
+                }
+                int highBit = a & 0x80;
+                a <<= 1;
+                if (highBit != 0)
+                {
+                    a ^= 0x11B; 
+                }
+                b >>= 1;
+            }
+
+            string resultHex = "0x" + result.ToString("X2");
+            return resultHex;
+        }
+
+        private string[,] UpdateKey(string[,] key, int round)
+        {
+            LinkedList<string> columnList = new LinkedList<string>();
+            string[,] newKey = new string[4, 4];
+
+            // add last column to the list
+            for (int i = 0; i < 4; i++) 
+            {
+                columnList.AddLast(key[i, 3]);
+            }
+
+            // perform shifting
+            string temp = columnList.First.Value;
+            columnList.RemoveFirst();
+            columnList.AddLast(temp);
+
+            // perform sub-bytes
+            string[] subKey = keySubBytes(columnList);
+
+            //calculate first column
+            for (int i = 0; i < 4; i++)
+            {
+                newKey[i, 0] = XOR(key[i, 0], subKey[i]);
+                newKey[i, 0] = XOR(newKey[i, 0], Constants.Rcon[i, round]);
+            }
+
+            for (int i = 1; i < 4; i++) 
+            {
+                for (int j = 0; j < 4; j++)
+                {
+                    newKey[j, i] = XOR(newKey[j, i - 1], key[j, i]);
                 }
             }
-            return str;
 
+            return newKey;
         }
+
+        
 
     }
 }
