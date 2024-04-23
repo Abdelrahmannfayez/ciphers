@@ -23,8 +23,6 @@ namespace SecurityLibrary.DES
 
             string resultedPlainText = ConvertBinaryToHex(binaryDecryptedText);
 
-            resultedPlainText = "0x" + resultedPlainText;
-
             return resultedPlainText;
         }
 
@@ -41,8 +39,6 @@ namespace SecurityLibrary.DES
             string binaryEncryptedText = PerformEncryption(plainText, keys);
 
             string resultedCipherText = ConvertBinaryToHex(binaryEncryptedText);
-
-            resultedCipherText = "0x" + resultedCipherText;
 
             return resultedCipherText;
         }
@@ -293,7 +289,7 @@ namespace SecurityLibrary.DES
             }
             hex += ConvertFourBitsToHex(temp);
 
-            return hex;
+            return "0x" + hex;
         }
 
         private char ConvertFourBitsToHex(string binary)
