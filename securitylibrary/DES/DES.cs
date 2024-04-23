@@ -11,7 +11,21 @@ namespace SecurityLibrary.DES
     {
         public override string Decrypt(string cipherText, string key)
         {
-            throw new NotImplementedException();
+            int[,] PC1 = Constants.PC1;
+
+            key = ConvertHexNumberToBinary(key);
+            string k1 = PerformKeyPermutaion(key, PC1);
+
+            List<string> keys = GenerateKeys(k1);
+            keys.Reverse();
+
+            string binaryDecryptedText = PerformDecryption(cipherText, keys);
+
+            string resultedPlainText = ConvertBinaryToHex(binaryDecryptedText);
+
+            resultedPlainText = "0x" + resultedPlainText;
+
+            return resultedPlainText;
         }
 
         public override string Encrypt(string plainText, string key)
@@ -31,6 +45,28 @@ namespace SecurityLibrary.DES
             resultedCipherText = "0x" + resultedCipherText;
 
             return resultedCipherText;
+        }
+
+        private string PerformDecryption(string mainCipher, List<string> keys)
+        {
+            mainCipher = ConvertHexNumberToBinary(mainCipher);
+            mainCipher = PerformKeyPermutaion(mainCipher, Constants.initialPermutationMatrix);
+
+            string L = SplitString(mainCipher, 0, mainCipher.Length / 2);
+            string R = SplitString(mainCipher, mainCipher.Length / 2, mainCipher.Length);
+
+            for (int i = 1; i <= 16; i++)
+            {
+                string Ltemp = L;
+                L = R;
+                R = XOR(Ltemp, F(R, keys[i - 1]));
+            }
+
+            string binaryDecryptedText = R + L;
+
+            binaryDecryptedText = PerformKeyPermutaion(binaryDecryptedText, Constants.FinalPermutationTable);
+
+            return binaryDecryptedText;
         }
 
         private string HexDigitToBinary(string hexDigit)
